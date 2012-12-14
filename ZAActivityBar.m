@@ -18,6 +18,10 @@
 @property (nonatomic, strong, readonly) UIActivityIndicatorView *spinnerView;
 @property (nonatomic, strong, readonly) UIImageView *imageView;
 
+@property (nonatomic) CGRect overlayWindowFrame;
+
+@property (nonatomic) int count;
+
 - (void) showWithStatus:(NSString *)status;
 - (void) setStatus:(NSString*)string;
 - (void) showImage:(UIImage*)image status:(NSString*)status duration:(NSTimeInterval)duration;
@@ -28,7 +32,7 @@
 
 @implementation ZAActivityBar
 
-@synthesize fadeOutTimer, overlayWindow, barView, stringLabel, spinnerView, imageView;
+@synthesize fadeOutTimer, overlayWindow, barView, stringLabel, spinnerView, imageView, overlayWindowFrame, count;
 
 - (void)dealloc {
 	self.fadeOutTimer = nil;
@@ -59,7 +63,10 @@
 + (ZAActivityBar *) sharedView {
     static dispatch_once_t once;
     static ZAActivityBar *sharedView;
-    dispatch_once(&once, ^ { sharedView = [[ZAActivityBar alloc] initWithFrame:[[UIScreen mainScreen] bounds]]; });
+    dispatch_once(&once, ^ {
+        sharedView = [[ZAActivityBar alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
+        sharedView.autoresizingMask = UIViewAutoresizingFlexibleHeight;
+    });
     return sharedView;
 }
 
@@ -72,6 +79,8 @@
 }
 
 - (void) showWithStatus:(NSString *)status {
+    count++;
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         if(!self.superview)
             [self.overlayWindow addSubview:self];
@@ -230,6 +239,9 @@
 }
 
 - (void) dismiss {
+    count = MAX(count-1, 0);
+    if (count) return;
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIView animateWithDuration:0.15
                               delay:0
@@ -269,12 +281,21 @@
 
 #pragma mark - Getters
 
+- (CGRect)overlayWindowFrame
+{
+    if (overlayWindowFrame.size.width == 0 || overlayWindowFrame.size.height == 0) {
+        overlayWindowFrame = [UIScreen mainScreen].bounds;
+    }
+    return overlayWindowFrame;
+}
+
 - (UIWindow *)overlayWindow {
     if(!overlayWindow) {
-        overlayWindow = [[UIWindow alloc] initWithFrame:[UIScreen mainScreen].bounds];
+        overlayWindow = [[UIWindow alloc] initWithFrame:self.overlayWindowFrame];
         overlayWindow.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         overlayWindow.backgroundColor = [UIColor clearColor];
         overlayWindow.userInteractionEnabled = NO;
+        overlayWindow.clipsToBounds = YES;
     }
     return overlayWindow;
 }
@@ -313,6 +334,12 @@
         [self.barView addSubview:imageView];
     
     return imageView;
+}
+
++ (void) setWindowFrame:(CGRect)frame
+{
+    [ZAActivityBar sharedView].overlayWindowFrame = frame;
+    [ZAActivityBar sharedView].frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
 }
 
 @end

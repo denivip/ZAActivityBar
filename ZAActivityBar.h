@@ -23,6 +23,7 @@
 
 @interface ZAActivityBar : UIView
 
++ (ZAActivityBar *) sharedView;
 + (void) show;
 + (void) dismiss;
 
@@ -30,5 +31,7 @@
 + (void) showSuccessWithStatus:(NSString *)status;
 + (void) showErrorWithStatus:(NSString *)status;
 + (void) showImage:(UIImage *)image status:(NSString *)status;
+
++ (void) setWindowFrame:(CGRect)frame;
 
 @end
