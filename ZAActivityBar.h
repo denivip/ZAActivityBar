@@ -33,5 +33,6 @@
 + (void) showImage:(UIImage *)image status:(NSString *)status;
 
 + (void) setWindowFrame:(CGRect)frame;
++ (void) setStatus:(NSString *)status;
 
 @end

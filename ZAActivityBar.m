@@ -17,10 +17,9 @@
 @property (nonatomic, strong, readonly) UILabel *stringLabel;
 @property (nonatomic, strong, readonly) UIActivityIndicatorView *spinnerView;
 @property (nonatomic, strong, readonly) UIImageView *imageView;
+@property (nonatomic, strong) NSString *loadingStatus;
 
 @property (nonatomic) CGRect overlayWindowFrame;
-
-@property (nonatomic) int count;
 
 - (void) showWithStatus:(NSString *)status;
 - (void) setStatus:(NSString*)string;
@@ -32,7 +31,7 @@
 
 @implementation ZAActivityBar
 
-@synthesize fadeOutTimer, overlayWindow, barView, stringLabel, spinnerView, imageView, overlayWindowFrame, count;
+@synthesize fadeOutTimer, overlayWindow, barView, stringLabel, spinnerView, imageView, overlayWindowFrame;
 
 - (void)dealloc {
 	self.fadeOutTimer = nil;
@@ -79,8 +78,6 @@
 }
 
 - (void) showWithStatus:(NSString *)status {
-    count++;
-    
     dispatch_async(dispatch_get_main_queue(), ^{
         if(!self.superview)
             [self.overlayWindow addSubview:self];
@@ -89,7 +86,7 @@
         self.imageView.hidden = YES;
 
         [self.overlayWindow setHidden:NO];
-        [self setStatus:status];
+        [self setStatus:status? status: self.loadingStatus];
         [self.spinnerView startAnimating];
 
         if (self.alpha != 1.0f) {
@@ -239,9 +236,6 @@
 }
 
 - (void) dismiss {
-    count = MAX(count-1, 0);
-    if (count) return;
-    
     dispatch_async(dispatch_get_main_queue(), ^{
         [UIView animateWithDuration:0.15
                               delay:0
@@ -340,6 +334,11 @@
 {
     [ZAActivityBar sharedView].overlayWindowFrame = frame;
     [ZAActivityBar sharedView].frame = CGRectMake(0, 0, frame.size.width, frame.size.height);
+}
+
++ (void)setStatus:(NSString *)status
+{
+    [ZAActivityBar sharedView].loadingStatus = status;
 }
 
 @end
